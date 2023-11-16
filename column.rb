@@ -2,7 +2,7 @@
 
 require 'google_drive'
 
-# comment
+# Worksheet column
 class Column
   def initialize(table, header_name, worksheet, start_row, start_col)
     @table = table
@@ -60,7 +60,7 @@ class Column
   end
 
   def to_s
-    @table[@start_row..].map { |row| row[@column_index] }.join("\n")
+    @table[@start_row..].map { |row| row[@column_index] }.join(' ')
   end
 
   private
@@ -77,6 +77,6 @@ class Column
   end
 
   def subtotal_row?(row)
-    row.any? { |cell| cell.to_s.downcase.include?('subtotal') }
+    row.any? { |cell| cell.to_s.downcase.include?('subtotal') || cell.to_s.downcase.include?('total') }
   end
 end

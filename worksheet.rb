@@ -1,17 +1,23 @@
 # frozen_string_literal: true
 
 require 'google_drive'
-require 'column'
+require './column'
 
 # A worksheet in a spreadsheet
 class Worksheet
   include Enumerable
   attr_reader(:worksheet, :columns, :table)
 
-  def initialize(session, key, index)
-    @worksheet = session.spreadsheet_by_key(key).worksheets[index]
-    @table = extract_table
-    @columns = canonicalize_headers
+  # Initializes a worksheet
+  # Key is the key of the spreadsheet
+  # Gid is the gid of the worksheet
+  def initialize(session, key, gid, table = nil)
+    @worksheet = session.spreadsheet_by_key(key).worksheet_by_gid(gid)
+    @session = session
+    @key = key
+    @gid = gid
+    @table = table || extract_table
+    canonicalize_headers!
   end
 
   def to_s
@@ -52,6 +58,24 @@ class Worksheet
     Column.new(@table, key, @worksheet, row, column)
   end
 
+  def operable?(other)
+    false unless other.is_a?(Worksheet)
+    @table[0] == other.table[0]
+  end
+
+  def +(other)
+    raise(ArgumentError, 'Tables are not operable.') unless operable?(other)
+
+    @table + other.table[1..] # Concatenate rows excluding the header of other table
+  end
+
+  def -(other)
+    raise(ArgumentError, 'Tables are not operable.') unless operable?(other)
+
+    # Remove rows from self that are present in other
+    @table.reject { |row| other.table.include?(row) }
+  end
+
   def method_missing(method_name, *_args)
     column_name = method_name.to_s
     #     "no such header name in: #{@table[0]} in worksheet: #{@worksheet.gid}"
@@ -80,11 +104,11 @@ class Worksheet
     @find_table ||= begin
       rows = @worksheet.num_rows
       cols = @worksheet.num_cols
-      return if rows.zero? && cols.zero?
+      raise(ArgumentError, 'No table found') if rows.zero? && cols.zero?
 
       # Multiple column table possible
-      cols.times do |i|
-        rows.times do |j|
+      rows.times do |i|
+        cols.times do |j|
           return [i + 1, j + 1] unless @worksheet[i + 1, j + 1].empty?
         end
       end
@@ -99,7 +123,6 @@ class Worksheet
   # Returns the table found in the worksheet as a matrix
   def extract_table
     table_start = find_table
-
     return nil if table_start.nil?
 
     start_row, start_col = table_start
@@ -112,7 +135,8 @@ class Worksheet
       row_data = []
       (start_col..cols).each do |j|
         cell_value = @worksheet[i, j]
-        break if cell_value.empty? && j == start_col # Break if the first cell of a row is empty
+        # Break if the first cell of a row is empty
+        break if cell_value.empty? && j == start_col
 
         row_data << cell_value
       end
@@ -122,13 +146,18 @@ class Worksheet
     table_matrix
   end
 
+  # Makes headers adhere to snake_case
+
   def canonicalize_headers
     @table[0].map { |header| header.downcase.gsub(/\s+/, '_') }
   end
 
+  # Makes headers adhere to snake_case, overwrites the original headers
   def canonicalize_headers!
     @table[0].map! { |header| header.downcase.gsub(/\s+/, '_') }
   end
 
+  def headers
+    @table[0]
+  end
 end
-

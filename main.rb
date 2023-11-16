@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require './worksheet'
-
+key = '1E4s88FL79ff-hrAyCDrDHkdAN2ZJTvm-f59fNxguxYE'
 session = GoogleDrive::Session.from_config('config.json')
 
-worksheet = Worksheet.new(session, '1E4s88FL79ff-hrAyCDrDHkdAN2ZJTvm-f59fNxguxYE', 0)
+# worksheet = Worksheet.new(session, key, 0)
 #
 # ## Displays memoization
 # p 'call'
@@ -112,9 +112,16 @@ worksheet = Worksheet.new(session, '1E4s88FL79ff-hrAyCDrDHkdAN2ZJTvm-f59fNxguxYE
 #
 # puts "Sum of column (excluding subtotal rows): #{sum}"
 
-column = worksheet.Age
-puts column
-puts column.sum
-col2 = worksheet.Score
-puts col2
-puts col2.average
+worksheet_operable_a = Worksheet.new(session, key, 924_246_715)
+worksheet_operable_b = Worksheet.new(session, key, 864_058_606)
+inoperable = Worksheet.new(session, key, 1_188_560_897)
+# p worksheet_operable_a.to_s
+# p worksheet_operable_b.to_s
+
+p worksheet_operable_a.operable? worksheet_operable_b
+
+p(worksheet_operable_b + worksheet_operable_a)
+# Should raise an error
+# inoperable + worksheet_operable_a
+
+p(worksheet_operable_a - worksheet_operable_b)
