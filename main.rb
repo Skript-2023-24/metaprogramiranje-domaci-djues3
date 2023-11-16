@@ -122,6 +122,6 @@ p worksheet_operable_a.operable? worksheet_operable_b
 
 p(worksheet_operable_b + worksheet_operable_a)
 # Should raise an error
-# inoperable + worksheet_operable_a
+inoperable + worksheet_operable_a
 
 p(worksheet_operable_a - worksheet_operable_b)

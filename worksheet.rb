@@ -13,9 +13,6 @@ class Worksheet
   # Gid is the gid of the worksheet
   def initialize(session, key, gid, table = nil)
     @worksheet = session.spreadsheet_by_key(key).worksheet_by_gid(gid)
-    @session = session
-    @key = key
-    @gid = gid
     @table = table || extract_table
     canonicalize_headers!
   end
